@@ -1,0 +1,47 @@
+# Resources:
+# https://github.com/gradle/gradle-build-action
+# https://docs.github.com/en/actions/tutorials/build-and-test-code/java-with-gradle
+
+name: CI
+
+# Run on every PR and also when pushing a tag that looks like vA.B.C
+on:
+  pull_request:
+  push:
+    tags: ["v*.*.*"]
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # Get the code for this run
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Install Java 21
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      # Enable gradle caching for faster builds
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      # Build + test. 
+      - name: Build and test
+        run: ./gradlew build test
+
+      # Upload JAR when there is a release
+      - name: Upload JAR
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-artifact@v4
+        with:
+          name: pacman-jar
+          path: build/libs/*.jar
+
+
+
+
