@@ -1,0 +1,26 @@
+# Default: treat text files as text and normalize to LF in the repo
+* text=auto eol=lf
+
+# Java/Gradle must be LF (good for Linux/macOS/CI)
+*.java   text eol=lf
+*.gradle text eol=lf
+*.kt     text eol=lf
+*.xml    text eol=lf
+*.md     text eol=lf
+*.yml    text eol=lf
+*.yaml   text eol=lf
+*.csv    text eol=lf
+
+# Shell scripts & wrappers must be LF
+gradlew          text eol=lf
+*.sh             text eol=lf
+
+# Windows batch files should be CRLF (so they run on Windows)
+*.bat            text eol=crlf
+*.cmd            text eol=crlf
+
+# Binary files (no normalization)
+*.png binary
+*.jpg binary
+*.jar binary
+*.zip binary
