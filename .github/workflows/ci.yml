@@ -30,9 +30,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      # Ensure wrapper is executable
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
       # Build + test. 
       - name: Build and test
-        run: ./gradlew build test
+        run: ./gradlew build test --no-daemon
 
       # Upload JAR when there is a release
       - name: Upload JAR
