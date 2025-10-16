@@ -16,12 +16,15 @@ repositories {
 }
 
 dependencies {
-    // Use JUnit Jupiter for testing.
+    // JUnit 5 (API + engine “bom” style)
     testImplementation(libs.junit.jupiter)
+    // Parameterized tests: @ParameterizedTest, @CsvSource, etc.
+    testImplementation(libs.junit.jupiter.params)
 
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    // handy for IDE/debug runners
+    testRuntimeOnly(libs.junit.platform.launcher)
 
-    // This dependency is used by the application.
+    // App deps
     implementation(libs.guava)
 }
 
@@ -34,7 +37,7 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = "org.example.App"
+    mainClass = "com.pacman.App"
 }
 
 tasks.named<Test>("test") {
