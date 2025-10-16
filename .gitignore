@@ -29,3 +29,7 @@ replay_pid*
 
 # Ignore Gradle build output directory
 build
+
+# If any module/IDE creates these
+bin/
+out/

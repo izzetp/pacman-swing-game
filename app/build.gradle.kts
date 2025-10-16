@@ -37,7 +37,7 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = "com.pacman.App"
+    mainClass = "com.pacman.ui.Main"
 }
 
 tasks.named<Test>("test") {
