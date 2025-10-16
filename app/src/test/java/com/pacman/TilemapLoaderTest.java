@@ -4,11 +4,12 @@ import com.pacman.model.TileType;
 import com.pacman.model.Map;
 import com.pacman.model.TilemapLoader;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.util.Map as JMap;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class TilemapLoaderTest {
 
