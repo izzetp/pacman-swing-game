@@ -3,6 +3,7 @@ package com.pacman;
 import org.junit.jupiter.api.Test;
 
 import com.pacman.model.Map;
+import com.pacman.model.MapLoader;
 import com.pacman.model.TileType;
 
 import java.io.File;
