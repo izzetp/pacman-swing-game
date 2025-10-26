@@ -117,6 +117,7 @@ public class GamePanel extends JPanel {
             repaint();
         });
         gameTimer.start();
+        requestFocusInWindow();
     }
 
     private void updateGameLogic() {
@@ -143,7 +144,6 @@ public class GamePanel extends JPanel {
             while (session.lives() > 0) session.loseLife();
         }
     }
-
 
     private int countPellets(Map m) {
         int n = 0;
