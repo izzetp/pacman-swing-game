@@ -30,7 +30,7 @@ class CollisionSystemTest {
 
         map = new Map(grid, 16);
 
-        // GameSession now needs: Map, ghostSpawnX, ghostSpawnY, playerSpawnX, playerSpawnY
+        // GameSession 
         session = new GameSession(map, 0, 0, 2, 2);
         session.start();
 
@@ -38,16 +38,17 @@ class CollisionSystemTest {
         player = new MovementSystem(map, 1.0);
         player.setPosition(session.playerSpawnTileX(), session.playerSpawnTileY());
 
-        // Ghost setup at its spawn
+        // Ghost setup (we'll move it in tests if needed)
         ghost = new Ghost(map, 1.0, session.ghostSpawnTileX(), session.ghostSpawnTileY());
-}
-
+    }
 
     @Test
     void testCollisionWhileChaseModeCausesLifeLoss() {
         int initialLives = session.lives();
 
         ghost.setMode(Ghost.Mode.CHASE);
+        ghost.setPosition(player.tileX(), player.tileY()); // move ghost to player tile
+
         boolean collided = CollisionSystem.checkCollisions(session, player, List.of(ghost));
 
         assertTrue(collided, "Collision should be detected");
@@ -59,10 +60,12 @@ class CollisionSystemTest {
         int initialLives = session.lives();
 
         ghost.setMode(Ghost.Mode.SCATTER);
+        ghost.setPosition(player.tileX(), player.tileY()); // move ghost to player tile
+
         boolean collided = CollisionSystem.checkCollisions(session, player, List.of(ghost));
 
-        assertTrue(collided);
-        assertEquals(initialLives - 1, session.lives());
+        assertTrue(collided, "Collision should be detected");
+        assertEquals(initialLives - 1, session.lives(), "Player should lose one life");
     }
 
     @Test
@@ -70,6 +73,8 @@ class CollisionSystemTest {
         int initialLives = session.lives();
 
         ghost.setMode(Ghost.Mode.FRIGHTENED);
+        ghost.setPosition(player.tileX(), player.tileY()); // move ghost to player tile
+
         boolean collided = CollisionSystem.checkCollisions(session, player, List.of(ghost));
 
         assertTrue(collided, "Collision should be detected");
@@ -98,6 +103,8 @@ class CollisionSystemTest {
         assertEquals(GameSession.State.GAME_OVER, session.state());
 
         ghost.setMode(Ghost.Mode.CHASE);
+        ghost.setPosition(player.tileX(), player.tileY()); // even if on player tile
+
         boolean collided = CollisionSystem.checkCollisions(session, player, List.of(ghost));
 
         assertFalse(collided, "No collision should occur when game is over");
