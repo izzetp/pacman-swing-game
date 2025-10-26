@@ -247,11 +247,14 @@ public class GamePanel extends JPanel {
             g2.drawString("Blue: " + (frightenedTimer.active() ? "ON" : "OFF"), 8, 42);
             g2.drawString("Timer: " + (int)Math.ceil(frightenedTimer.secondsLeft()), 8, 56);
 
-            // Menu and game over
+            // Menu, game over and Win 
             if (session.state() == GameSession.State.MENU) {
                 g2.setFont(g2.getFont().deriveFont(Font.BOLD, 18f));
                 g2.drawString("PAC-MAN", getWidth()/2 - 48, getHeight()/2 - 20);
                 g2.drawString("Press ENTER to start", getWidth()/2 - 90, getHeight()/2 + 10);
+                g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 12f));
+                g2.drawString("Use arrow keys to move", getWidth()/2 - 60, getHeight()/2 + 30);
+
             } else if (session.state() == GameSession.State.GAME_OVER) {
                 g2.setFont(g2.getFont().deriveFont(Font.BOLD, 18f));
                 g2.drawString("GAME OVER", getWidth()/2 - 60, getHeight()/2 - 10); 
