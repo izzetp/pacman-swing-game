@@ -1,36 +1,45 @@
 package com.pacman;
 
+import com.pacman.logic.PlayerPickupSystem;
+import com.pacman.model.Map;
+import com.pacman.model.TileType;
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class PelletSystemTest {
-  @Test void pelletOncePowerOnce() {
-    char[][] g = {
-      "WWWWW".toCharArray(),
-      "W.o.W".toCharArray(),
-      "W...W".toCharArray(),
-      "W   W".toCharArray(),
-      "WWWWW".toCharArray()
-    };
-    int score = 0;
-    // eat pellet once
-    score += eat(g, 1, 2);
-    score += eat(g, 1, 2);
-    assertEquals(10, score);
-    // eat power pellet once
-    score += eat(g, 2, 1);
-    score += eat(g, 2, 1);
-    assertEquals(60, score);
-  }
 
-  // will be replaced by production API in green phase
-  private int eat(char[][] grid, int x, int y) {
-    if (grid[y][x]=='.') { 
-        grid[y][x]=' '; return 10; 
+    @Test
+    void eatingPelletGives10AndClearsTile() {
+        TileType[][] grid = {
+                {TileType.WALL, TileType.WALL, TileType.WALL},
+                {TileType.WALL, TileType.PACDOT, TileType.WALL},
+                {TileType.WALL, TileType.WALL, TileType.WALL}
+        };
+        Map map = new Map(grid, 16);
+
+        int score1 = PlayerPickupSystem.eatAt(map, 1, 1);
+        int score2 = PlayerPickupSystem.eatAt(map, 1, 1); // second time should be zero
+
+        assertEquals(10, score1);
+        assertEquals(0, score2);
+        assertEquals(TileType.EMPTY, map.getTile(1, 1));
     }
-    if (grid[y][x]=='o') { 
-        grid[y][x]=' '; return 50; 
+
+    @Test
+    void eatingPowerPelletGives50AndClearsTile() {
+        TileType[][] grid = {
+                {TileType.WALL, TileType.WALL, TileType.WALL},
+                {TileType.WALL, TileType.POWER_PACDOT, TileType.WALL},
+                {TileType.WALL, TileType.WALL, TileType.WALL}
+        };
+        Map map = new Map(grid, 16);
+
+        int score1 = PlayerPickupSystem.eatAt(map, 1, 1);
+        int score2 = PlayerPickupSystem.eatAt(map, 1, 1);
+
+        assertEquals(50, score1);
+        assertEquals(0, score2);
+        assertEquals(TileType.EMPTY, map.getTile(1, 1));
     }
-    return 0;
-  }
 }
