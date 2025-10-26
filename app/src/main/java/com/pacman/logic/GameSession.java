@@ -5,7 +5,7 @@ import com.pacman.model.TileType;
 
 public class GameSession {
 
-    public enum State { MENU, PLAYING, GAME_OVER }
+    public enum State { MENU, PLAYING, GAME_OVER, WIN }
 
     private final TileType[][] levelSnapshot;
     private final int ghostSpawnX, ghostSpawnY;
@@ -29,6 +29,12 @@ public class GameSession {
             restoreLevel();
             state = State.PLAYING;
         }
+    }
+
+    public void win() {
+      lives = 3;
+      restoreLevel();
+      state = State.WIN;
     }
 
     public void loseLife() {

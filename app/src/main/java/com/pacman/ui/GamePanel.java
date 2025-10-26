@@ -86,11 +86,15 @@ public class GamePanel extends JPanel {
             @Override public void actionPerformed(ActionEvent e) { player.request(Direction.RIGHT); }
         });
         getActionMap().put("restart", new AbstractAction() {
-            @Override public void actionPerformed(ActionEvent e) {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            if (session.state() == GameSession.State.GAME_OVER || session.state() == GameSession.State.WIN) {
                 session.restart();
                 resetPositions();
-            }
-        });
+        }
+    }
+});
+
     }
 
     public void startGame() {
@@ -133,9 +137,8 @@ public class GamePanel extends JPanel {
         }
 
         if (countPellets(map) == 0) {
-            session.restart();
+            session.win(); // trigger WIN state
             resetPositions();
-            while (session.lives() > 0) session.loseLife();
         }
     }
 
@@ -238,7 +241,16 @@ public class GamePanel extends JPanel {
             } else if (session.state() == GameSession.State.GAME_OVER) {
                 g2.setFont(g2.getFont().deriveFont(Font.BOLD, 18f));
                 g2.drawString("GAME OVER", getWidth()/2 - 60, getHeight()/2 - 10); 
-                g2.drawString("Press ENTER to play again", getWidth()/2 - 100, getHeight()/2 + 20);
+                g2.drawString("Press SPACE to play again", getWidth()/2 - 100, getHeight()/2 + 20);
+            } else if (session.state() == GameSession.State.WIN) {
+                g2.setFont(g2.getFont().deriveFont(Font.BOLD, 24f));
+                g2.setColor(Color.YELLOW);
+                g2.drawString("CONGRATULATIONS! YOU WON!", getWidth()/2 - 180, getHeight()/2 - 20);
+
+                g2.setFont(g2.getFont().deriveFont(Font.BOLD, 18f));
+                g2.setColor(Color.WHITE);
+                g2.drawString("Score: " + score.value(), getWidth()/2 - 50, getHeight()/2 + 10);
+                g2.drawString("Lives Remaining: " + session.lives(), getWidth()/2 - 80, getHeight()/2 + 40);
             }
         } finally {
             g2.dispose();
