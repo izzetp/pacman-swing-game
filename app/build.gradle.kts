@@ -41,7 +41,7 @@ application {
 }
 
 // Set the version for the app module so the jar name includes it
-version = "1.0.1"
+version = "1.0.2"
 
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
