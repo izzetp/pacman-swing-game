@@ -1,7 +1,18 @@
 package com.pacman.ui;
 
-import com.pacman.logic.*;
-import com.pacman.model.*;
+import com.pacman.logic.CollisionSystem;
+import com.pacman.logic.FrightenedTimer;
+import com.pacman.logic.GameClock;
+import com.pacman.logic.GameSession;
+import com.pacman.logic.Ghost;
+import com.pacman.logic.MovementSystem;
+import com.pacman.logic.PlayerPickupSystem;
+import com.pacman.model.Direction;
+import com.pacman.model.Map;
+import com.pacman.model.MapLoader;
+import com.pacman.model.Score;
+import com.pacman.model.TileSet;
+import com.pacman.model.TileType;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,9 +20,6 @@ import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * GamePanel with Pac-Man and ghost spawns according to classic layout.
- */
 public class GamePanel extends JPanel {
 
     private static final int TILE_SIZE = 16;
@@ -23,10 +31,12 @@ public class GamePanel extends JPanel {
     private GameSession session;
     private MovementSystem player;
     private List<Ghost> ghosts = new ArrayList<>();
-    private Score score = new Score();
+    private final Score score = new Score();
 
+    private final GameClock fixedClock = () -> 1.0 / 60.0;
     private Timer gameTimer;
-    private final GameClock fixedClock = () -> 1.0 / 60.0; // ~60 FPS
+
+    private FrightenedTimer frightenedTimer;
 
     public GamePanel() {
         setPreferredSize(new Dimension(COLS * TILE_SIZE, ROWS * TILE_SIZE));
@@ -34,26 +44,22 @@ public class GamePanel extends JPanel {
         setFocusable(true);
         setDoubleBuffered(true);
 
-        // --- Load map ---
         Map txtMap = tryLoadTxtMap("/maps/original_pacman.txt");
         map = (txtMap != null) ? txtMap : new Map(generateProceduralMaze(COLS, ROWS), TILE_SIZE);
 
-        // --- Initialize session ---
-        session = new GameSession(map, 13, 23); // Pac-Man spawn
+        session = new GameSession(map, 13, 23);
         session.start();
 
-        // --- Player setup ---
         player = new MovementSystem(map, 8.0);
-        player.setPosition(13, 21); // Pac-Man spawn
+        player.setPosition(13, 21);
 
-        // --- Ghost setup (center pen) ---
         ghosts = new ArrayList<>();
         int ghostRow = 14;
         int ghostStartCol = 12;
 
         Ghost blinky = new Ghost(map, 6.0);
         blinky.setPosition(ghostStartCol, ghostRow);
-        blinky.setMode(Ghost.Mode.CHASE);
+        blinky.setMode(Ghost.Mode.SCATTER);
 
         Ghost pinky = new Ghost(map, 6.0);
         pinky.setPosition(ghostStartCol + 2, ghostRow);
@@ -72,7 +78,8 @@ public class GamePanel extends JPanel {
         ghosts.add(inky);
         ghosts.add(clyde);
 
-        // --- Keyboard bindings ---
+        frightenedTimer = new FrightenedTimer(ghosts);
+
         setupInput();
     }
 
@@ -113,32 +120,40 @@ public class GamePanel extends JPanel {
     }
 
     private void updateGameLogic() {
-        // --- Update player ---
+        if (session.state() != GameSession.State.PLAYING) return;
+
         player.tick(fixedClock);
 
-        // --- Eat pellets / power pellets ---
-        int points = PlayerPickupSystem.eatAt(map, player.tileX(), player.tileY());
-        if (points > 0) {
-            score.add(points);
-            if (points == 50) {
-                // Power pellet: ghosts frightened
-                for (Ghost g : ghosts) g.setMode(Ghost.Mode.FRIGHTENED);
-            }
+        int gained = PlayerPickupSystem.eatAt(map, player.tileX(), player.tileY());
+        if (gained > 0) {
+            score.add(gained);
+            if (gained == 50) frightenedTimer.start(7.0);
         }
 
-        // --- Update ghosts ---
+        frightenedTimer.tick(fixedClock);
+
         for (Ghost g : ghosts) {
             g.updateTarget(player.tileX(), player.tileY());
             g.tick(fixedClock);
         }
 
-        // --- Collisions ---
-        CollisionSystem.checkCollisions(session, player, ghosts);
+        CollisionSystem.checkCollisions(session, player, ghosts, score);
 
-        // --- Win condition ---
-        if (map.countPellets() == 0) {
-            session.loseLife(); // placeholder for level complete
+        if (countPellets(map) == 0) {
+            while (session.lives() > 0) session.loseLife();
         }
+    }
+
+
+    private int countPellets(Map m) {
+        int n = 0;
+        for (int r = 0; r < m.rows(); r++) {
+            for (int c = 0; c < m.cols(); c++) {
+                TileType t = m.getTile(r, c);
+                if (t == TileType.PACDOT || t == TileType.POWER_PACDOT) n++;
+            }
+        }
+        return n;
     }
 
     private Map tryLoadTxtMap(String resourcePath) {
@@ -153,12 +168,11 @@ public class GamePanel extends JPanel {
 
     private TileType[][] generateProceduralMaze(int cols, int rows) {
         TileType[][] g = new TileType[rows][cols];
-        for (int r = 0; r < rows; r++)
-            for (int c = 0; c < cols; c++)
-                g[r][c] = TileType.PACDOT;
-
-        for (int c = 0; c < cols; c++) { g[0][c] = TileType.WALL; g[rows-1][c] = TileType.WALL; }
-        for (int r = 0; r < rows; r++) { g[r][0] = TileType.WALL; g[r][cols-1] = TileType.WALL; }
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) g[r][c] = TileType.PACDOT;
+        }
+        for (int c = 0; c < cols; c++) { g[0][c] = TileType.WALL; g[rows - 1][c] = TileType.WALL; }
+        for (int r = 0; r < rows; r++) { g[r][0] = TileType.WALL; g[r][cols - 1] = TileType.WALL; }
 
         int midC = cols / 2, midR = rows / 2;
         g[midR][midC - 1] = TileType.GHOST_GATE;
@@ -182,31 +196,31 @@ public class GamePanel extends JPanel {
         try {
             map.draw(g2, tileSet);
 
-            // --- Draw player ---
             g2.setColor(Color.GRAY);
             g2.fillOval(player.tileX() * TILE_SIZE, player.tileY() * TILE_SIZE, TILE_SIZE, TILE_SIZE);
 
-            // --- Draw ghosts with unique colors ---
             int idx = 0;
             for (Ghost ghost : ghosts) {
                 switch (idx) {
-                    case 0 -> g2.setColor(Color.RED);          // Blinky
-                    case 1 -> g2.setColor(Color.PINK);         // Pinky
-                    case 2 -> g2.setColor(Color.CYAN);         // Inky
-                    case 3 -> g2.setColor(new Color(255,165,0)); // Clyde
+                    case 0 -> g2.setColor(Color.RED);
+                    case 1 -> g2.setColor(Color.PINK);
+                    case 2 -> g2.setColor(Color.CYAN);
+                    case 3 -> g2.setColor(new Color(255, 165, 0));
+                    default -> g2.setColor(Color.WHITE);
                 }
                 if (ghost.mode() == Ghost.Mode.FRIGHTENED) g2.setColor(Color.BLUE);
                 g2.fillOval(ghost.tileX() * TILE_SIZE, ghost.tileY() * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                 idx++;
             }
 
-            // --- HUD ---
             g2.setColor(Color.WHITE);
             g2.drawString("Score: " + score.value(), 8, 14);
             g2.drawString("Lives: " + session.lives(), 8, 28);
+            g2.drawString("Blue: " + (frightenedTimer.active() ? "ON" : "OFF"), 8, 42);
+
             if (session.state() == GameSession.State.GAME_OVER) {
                 g2.setFont(g2.getFont().deriveFont(Font.BOLD, 18f));
-                g2.drawString("GAME OVER - Press SPACE", getWidth()/4, getHeight()/2);
+                g2.drawString("GAME OVER - Press SPACE", getWidth() / 4, getHeight() / 2);
             }
         } finally {
             g2.dispose();

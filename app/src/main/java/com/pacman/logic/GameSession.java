@@ -35,11 +35,11 @@ public class GameSession {
       lives = 0;
       state = State.GAME_OVER;
     } else {
-      restoreLevel(); // restart level on life loss
+      restoreLevel(); 
     }
   }
 
-  public void restart() { // from GameOver to a Playing run
+  public void restart() {
     if (state == State.GAME_OVER) {
       lives = 3;
       restoreLevel();
