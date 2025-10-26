@@ -14,7 +14,7 @@ It runs on Windows, macOS, and Linux.
 2. Double-click the JAR, or run it from a terminal:
 
    ```
-   java -jar app/build/libs/pacman-1.0.0.jar
+   java -jar app/build/libs/pacman-1.0.2.jar
    ```
 
 ### Option 2: Build from source
@@ -22,7 +22,7 @@ If you prefer to build it yourself, make sure you have Java 21 or later installe
 
 ```
 ./gradlew :app:clean :app:build
-java -jar app/build/libs/pacman-1.0.0.jar
+java -jar app/build/libs/pacman-1.0.2.jar
 ```
 
 ---
