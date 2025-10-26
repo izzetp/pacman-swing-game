@@ -138,7 +138,7 @@ public class GamePanel extends JPanel {
             g.tick(fixedClock);
         }
 
-        CollisionSystem.checkCollisions(session, player, ghosts, score);
+        CollisionSystem.checkCollisions(session, player, ghosts, score, frightenedTimer);
 
         if (countPellets(map) == 0) {
             while (session.lives() > 0) session.loseLife();
