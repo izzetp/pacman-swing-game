@@ -40,7 +40,26 @@ application {
     mainClass = "com.pacman.ui.Main"
 }
 
+// Set the version for the app module so the jar name includes it
+version = "1.0.1"
+
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+}
+
+// Make a runnable jar in app/build/libs/ with resources packaged
+tasks.jar {
+    // Name like pacman-1.0.1.jar instead of app-1.0.1.jar
+    archiveBaseName.set("pacman")
+    archiveVersion.set(project.version.toString())
+
+    // Ensure double-click / `java -jar` works
+    manifest {
+        attributes["Main-Class"] = application.mainClass.get()
+    }
+
+    // Include resources (tiles, maps, etc.) inside the jar
+    from(sourceSets.main.get().resources)
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
