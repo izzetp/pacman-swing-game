@@ -98,22 +98,35 @@ public class GamePanel extends JPanel {
     }
 
     public void startGame() {
-        if (gameTimer != null && gameTimer.isRunning()) return;
+        Thread gameLoop = new Thread(() -> {
+            long lastTime = System.nanoTime();
+            final double nsPerUpdate = 1_000_000_000.0 / 120.0; 
 
-        gameTimer = new Timer(16, e -> {
-            if (session.state() == GameSession.State.PLAYING) {
-                updateGameLogic();
+            while (true) {
+               long now = System.nanoTime();
+                double deltaSeconds = (now - lastTime) / 1_000_000_000.0;
+                lastTime = now;
+
+                if (session.state() == GameSession.State.PLAYING) {
+                    updateGameLogic(deltaSeconds);
+                }
+
+                repaint();
+
+                try {
+                    Thread.sleep(2); // reduce CPU usage
+                } catch (InterruptedException ignored) {}
             }
-            repaint();
         });
-        gameTimer.start();
+        gameLoop.setDaemon(true);
+        gameLoop.start();
         requestFocusInWindow();
-    }
+    }   
 
-    private void updateGameLogic() {
+    private void updateGameLogic(double deltaSeconds) {
         if (session.state() != GameSession.State.PLAYING) return;
 
-        player.tick(fixedClock);
+        player.tick(() -> deltaSeconds);
 
         int gained = PlayerPickupSystem.eatAt(map, player.tileX(), player.tileY());
         if (gained > 0) {
@@ -121,12 +134,12 @@ public class GamePanel extends JPanel {
             if (gained == 50) frightenedTimer.start(7.0);
         }
 
-        frightenedTimer.tick(fixedClock);
+        frightenedTimer.tick(() -> deltaSeconds);
 
         for (Ghost g : ghosts) {
             g.updateTarget(player.tileX(), player.tileY());
-            g.tick(fixedClock);
-        }
+            g.tick(() -> deltaSeconds);
+        }   
 
         int livesBefore = session.lives();
         boolean hit = CollisionSystem.checkCollisions(session, player, ghosts, score, frightenedTimer);
@@ -137,10 +150,11 @@ public class GamePanel extends JPanel {
         }
 
         if (countPellets(map) == 0) {
-            session.win(); // trigger WIN state
+            session.win();
             resetPositions();
         }
     }
+
 
     /** Reset player and ghosts safely to spawn positions */
     private void resetPositions() {
