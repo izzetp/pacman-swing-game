@@ -32,8 +32,7 @@ public final class CollisionSystem {
         for (Ghost g : ghosts) {
             if (g.tileX() == px && g.tileY() == py) {
                 if (g.mode() == Ghost.Mode.FRIGHTENED) {
-                    g.respawn();
-
+                    g.respawn(session.ghostSpawnTileX(), session.ghostSpawnTileY());
                     if (score != null) {
                         int add = frightenedTimer != null ? frightenedTimer.nextEatScore() : 200;
                         score.add(add);
@@ -43,7 +42,8 @@ public final class CollisionSystem {
                 } else {
                     // Player hit a non-frightened ghost
                     session.loseLife();
-                    player.setToTileCenter(session.spawnTileX(), session.spawnTileY());
+                    // **RESPAWN PLAYER at initial player spawn**
+                    player.setToTileCenter(session.playerSpawnTileX(), session.playerSpawnTileY());
                     return true;
                 }
             }

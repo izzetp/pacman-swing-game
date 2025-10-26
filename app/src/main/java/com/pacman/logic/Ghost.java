@@ -77,11 +77,18 @@ public class Ghost {
         this.targetY = tileY;
     }
 
-    /** Respawn at initial spawn and freeze for 5 seconds. */
+    /** Respawn at current default spawn (old method) */
     public void respawn() {
-        setPosition(initialX, initialY);
-        setMode(Mode.SCATTER);
-        respawnDelay = 5.0; // 5-second wait before moving
+        respawnDelay = 5.0;
+        movement.setPosition(movement.tileX(), movement.tileY()); // keep current tile
+        mode = Mode.SCATTER;
+    }
+
+    /** Respawn at specified tile and freeze for 5 seconds */
+    public void respawn(int tileX, int tileY) {
+        movement.setPosition(tileX, tileY);
+        mode = Mode.SCATTER;
+        respawnDelay = 5.0;
     }
 
     public boolean isWaitingToMove() {

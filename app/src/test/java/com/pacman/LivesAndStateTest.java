@@ -19,7 +19,7 @@ class LivesAndStateTest {
 
   @Test
   void startsInMenuAndGoesToPlayingOnStart() {
-    GameSession s = new GameSession(mapWithPellets(), /*spawnX*/1, /*spawnY*/1);
+    GameSession s = new GameSession(mapWithPellets(), 0, 0, 1, 1);
     assertEquals(GameSession.State.MENU, s.state());
     s.start();
     assertEquals(GameSession.State.PLAYING, s.state());
@@ -29,7 +29,7 @@ class LivesAndStateTest {
   @Test
   void losingALifeResetsLevelAndKeepsPlayingUntilZero() {
     Map original = mapWithPellets();
-    GameSession s = new GameSession(original, 1, 1);
+    GameSession s = new GameSession(original, 0, 0, 1, 1);
     s.start();
 
     original.setTile(1,1, TileType.EMPTY);
@@ -43,7 +43,7 @@ class LivesAndStateTest {
 
   @Test
   void reachingZeroLivesSwitchesToGameOver() {
-    GameSession s = new GameSession(mapWithPellets(), 1, 1);
+    GameSession s = new GameSession(mapWithPellets(), 0, 0, 1, 1);
     s.start();
     s.loseLife(); // 2
     s.loseLife(); // 1
@@ -54,7 +54,7 @@ class LivesAndStateTest {
 
   @Test
   void restartFromGameOverRestoresLivesAndLevelAndGoesToPlaying() {
-    GameSession s = new GameSession(mapWithPellets(), 1, 1);
+    GameSession s = new GameSession(mapWithPellets(), 0, 0, 1, 1);
     s.start();
     s.loseLife(); s.loseLife(); s.loseLife(); // GAME_OVER
 

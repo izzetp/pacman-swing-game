@@ -29,16 +29,19 @@ class CollisionSystemTest {
                 grid[r][c] = TileType.EMPTY;
 
         map = new Map(grid, 16);
-        session = new GameSession(map, 1, 1);
+
+        // GameSession now needs: Map, ghostSpawnX, ghostSpawnY, playerSpawnX, playerSpawnY
+        session = new GameSession(map, 0, 0, 2, 2);
         session.start();
 
+        // Player setup at its spawn
         player = new MovementSystem(map, 1.0);
-        player.setPosition(2, 2);
+        player.setPosition(session.playerSpawnTileX(), session.playerSpawnTileY());
 
-        // Ghost now requires spawn coordinates
-        ghost = new Ghost(map, 1.0, 0, 0);
-        ghost.setPosition(2, 2); // same tile as player for collision
-    }
+        // Ghost setup at its spawn
+        ghost = new Ghost(map, 1.0, session.ghostSpawnTileX(), session.ghostSpawnTileY());
+}
+
 
     @Test
     void testCollisionWhileChaseModeCausesLifeLoss() {
@@ -73,15 +76,15 @@ class CollisionSystemTest {
         assertEquals(initialLives, session.lives(), "Player should NOT lose a life when ghost is frightened");
 
         // Ghost should respawn at its own spawn position now (0,0)
-        assertEquals(0, ghost.tileX(), "Ghost should respawn at its own spawn X");
-        assertEquals(0, ghost.tileY(), "Ghost should respawn at its own spawn Y");
+        assertEquals(session.ghostSpawnTileX(), ghost.tileX(), "Ghost should respawn at its spawn X");
+        assertEquals(session.ghostSpawnTileY(), ghost.tileY(), "Ghost should respawn at its spawn Y");
         assertEquals(Ghost.Mode.SCATTER, ghost.mode(), "Ghost should return to scatter mode after being eaten");
         assertTrue(ghost.isWaitingToMove(), "Ghost should be waiting before moving again");
     }
 
     @Test
     void testNoCollisionWhenDifferentTiles() {
-        ghost.setPosition(0, 0); // far away
+        ghost.setPosition(0, 0); // far away from player
         boolean collided = CollisionSystem.checkCollisions(session, player, List.of(ghost));
 
         assertFalse(collided, "No collision expected when not on same tile");

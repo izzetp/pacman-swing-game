@@ -23,9 +23,21 @@ public class MovementSystem {
         this.dir = Direction.NONE; this.requested = Direction.NONE;
     }
 
+    /** Safely moves entity to a tile center for respawn, avoiding walls */
     public void setToTileCenter(int tx, int ty) {
-        this.tileX = tx; this.tileY = ty;
-        this.offX = 0; this.offY = 0;
+        if (!map.isWalkable(tx, ty)) {
+            // snap to nearest walkable tile (simple BFS or directional fallback)
+            int[] safe = findNearestWalkable(tx, ty);
+            this.tileX = safe[0];
+            this.tileY = safe[1];
+        } else {
+            this.tileX = tx;
+            this.tileY = ty;
+        }
+        this.offX = 0;
+        this.offY = 0;
+        this.dir = Direction.NONE;
+        this.requested = Direction.NONE;
     }
 
     public void request(Direction d) { this.requested = d; }
@@ -92,6 +104,7 @@ public class MovementSystem {
                 if (dir == Direction.DOWN)  tileY++;
                 offX = offY = 0.0;
 
+                // horizontal wrap
                 if (tileX < 0) tileX = map.cols() - 1;
                 if (tileX >= map.cols()) tileX = 0;
 
@@ -101,5 +114,22 @@ public class MovementSystem {
                 }
             }
         }
+    }
+
+    /** Finds nearest walkable tile from given coordinates (simple 4-directional search) */
+    private int[] findNearestWalkable(int x, int y) {
+        if (map.isWalkable(x, y)) return new int[]{x, y};
+        int[][] deltas = {{0,-1},{0,1},{-1,0},{1,0}};
+        for (int dist = 1; dist < Math.max(map.rows(), map.cols()); dist++) {
+            for (int[] d : deltas) {
+                int nx = x + d[0]*dist;
+                int ny = y + d[1]*dist;
+                if (nx >= 0 && nx < map.cols() && ny >= 0 && ny < map.rows() && map.isWalkable(nx, ny)) {
+                    return new int[]{nx, ny};
+                }
+            }
+        }
+        // fallback: original position if no walkable found (shouldn't happen)
+        return new int[]{x, y};
     }
 }
