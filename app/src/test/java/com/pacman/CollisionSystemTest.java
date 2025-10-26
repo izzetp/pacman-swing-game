@@ -35,8 +35,9 @@ class CollisionSystemTest {
         player = new MovementSystem(map, 1.0);
         player.setPosition(2, 2);
 
-        ghost = new Ghost(map, 1.0);
-        ghost.setPosition(2, 2); // initially same tile for collision
+        // Ghost now requires spawn coordinates
+        ghost = new Ghost(map, 1.0, 0, 0);
+        ghost.setPosition(2, 2); // same tile as player for collision
     }
 
     @Test
@@ -71,10 +72,11 @@ class CollisionSystemTest {
         assertTrue(collided, "Collision should be detected");
         assertEquals(initialLives, session.lives(), "Player should NOT lose a life when ghost is frightened");
 
-        // Ghost should respawn at session spawn position
-        assertEquals(session.spawnTileX(), ghost.tileX(), "Ghost should respawn at spawn X");
-        assertEquals(session.spawnTileY(), ghost.tileY(), "Ghost should respawn at spawn Y");
+        // Ghost should respawn at its own spawn position now (0,0)
+        assertEquals(0, ghost.tileX(), "Ghost should respawn at its own spawn X");
+        assertEquals(0, ghost.tileY(), "Ghost should respawn at its own spawn Y");
         assertEquals(Ghost.Mode.SCATTER, ghost.mode(), "Ghost should return to scatter mode after being eaten");
+        assertTrue(ghost.isWaitingToMove(), "Ghost should be waiting before moving again");
     }
 
     @Test

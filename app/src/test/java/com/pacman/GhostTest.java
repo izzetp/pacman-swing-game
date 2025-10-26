@@ -7,7 +7,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-
 public class GhostTest {
 
     private Map map;
@@ -28,19 +27,19 @@ public class GhostTest {
 
     @Test
     void ghostMovesInCurrentDirectionWhenPathIsClear() {
-        Ghost ghost = new Ghost(map, 5.0); // 5 tiles/sec
+        Ghost ghost = new Ghost(map, 5.0, 1, 1); // spawn (1,1)
         ghost.setPosition(1, 1);
         ghost.setDirection(Direction.RIGHT);
 
         ghost.tick(clock);
 
         assertEquals(1, ghost.tileY());
-        assertTrue(ghost.tileX() >= 1); // should advance toward right
+        assertTrue(ghost.tileX() >= 1, "Ghost should move right if path is clear");
     }
 
     @Test
     void ghostStopsWhenBlockedByWall() {
-        Ghost ghost = new Ghost(map, 5.0);
+        Ghost ghost = new Ghost(map, 5.0, 2, 1);
         ghost.setPosition(2, 1);
         ghost.setDirection(Direction.RIGHT); // next tile is wall
 
@@ -53,12 +52,12 @@ public class GhostTest {
 
     @Test
     void ghostCanChangeDirectionWhenAligned() {
-        Ghost ghost = new Ghost(map, 5.0);
+        Ghost ghost = new Ghost(map, 5.0, 1, 1);
         ghost.setPosition(1, 1);
         ghost.setDirection(Direction.RIGHT);
         ghost.requestDirection(Direction.DOWN); // will turn at intersection
 
-        // simulate moving to next intersection (2,1) then center-align
+        // simulate movement over time
         for (int i = 0; i < 20; i++) ghost.tick(clock);
 
         assertEquals(Direction.DOWN, ghost.currentDirection());
@@ -66,7 +65,7 @@ public class GhostTest {
 
     @Test
     void ghostMovesRandomlyWhenFrightened() {
-        Ghost ghost = new Ghost(map, 5.0);
+        Ghost ghost = new Ghost(map, 5.0, 2, 2);
         ghost.setPosition(2, 2);
         ghost.setMode(Ghost.Mode.FRIGHTENED);
 
@@ -79,21 +78,37 @@ public class GhostTest {
 
     @Test
     void ghostChaseTargetMovesTowardPacman() {
-        Ghost ghost = new Ghost(map, 5.0);
+        Ghost ghost = new Ghost(map, 5.0, 1, 1);
         ghost.setPosition(1, 1);
         ghost.setMode(Ghost.Mode.CHASE);
 
-        // Pacman position (target)
-        int targetX = 3, targetY = 1;
-
-        ghost.updateTarget(targetX, targetY);
+        // Pacman target (3,1)
+        ghost.updateTarget(3, 1);
         ghost.tick(clock);
 
-        // ghost should move toward right (toward pacman)
-        assertEquals(Direction.RIGHT, ghost.currentDirection());
+        assertEquals(Direction.RIGHT, ghost.currentDirection(), "Ghost should chase toward right");
     }
 
-    // --- helper mock clock
+    @Test
+    void respawnSetsPositionToSpawnAndDelaysMovement() {
+        Ghost ghost = new Ghost(map, 5.0, 1, 1);
+        ghost.setPosition(3, 3);
+        ghost.setMode(Ghost.Mode.FRIGHTENED);
+
+        ghost.respawn();
+
+        assertEquals(1, ghost.tileX(), "Ghost should reset to its spawn X");
+        assertEquals(1, ghost.tileY(), "Ghost should reset to its spawn Y");
+        assertEquals(Ghost.Mode.SCATTER, ghost.mode(), "Ghost should return to scatter mode after respawn");
+        assertTrue(ghost.isWaitingToMove(), "Ghost should wait before moving after respawn");
+
+        // Simulate 5 seconds 
+        for (int i = 0; i < 310; i++) ghost.tick(clock);
+
+        assertFalse(ghost.isWaitingToMove(), "Ghost should start moving again after 5 seconds");
+    }
+
+    // --- helper mock clock ---
     static class MockClock implements GameClock {
         private final double dt;
         MockClock(double dt) { this.dt = dt; }

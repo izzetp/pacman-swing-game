@@ -25,12 +25,19 @@ public class Ghost {
     private int targetX;
     private int targetY;
 
-    public Ghost(Map map, double speedTilesPerSec) {
+    private final int initialX;
+    private final int initialY;
+    private double respawnDelay = 0.0; // seconds waiting before moving
+
+    public Ghost(Map map, double speedTilesPerSec, int spawnX, int spawnY) {
         this.map = map;
         this.movement = new MovementSystem(map, speedTilesPerSec);
+        this.initialX = spawnX;
+        this.initialY = spawnY;
+        setPosition(spawnX, spawnY);
     }
 
-    // --- Public API used by tests and gameplay ---
+    // --- Public API used by gameplay ---
 
     public void setPosition(int tileX, int tileY) {
         movement.setPosition(tileX, tileY);
@@ -46,7 +53,6 @@ public class Ghost {
     }
 
     public Direction currentDirection() {
-        // There's no direct getter, but we can add a small helper below.
         return movementDirection();
     }
 
@@ -71,10 +77,24 @@ public class Ghost {
         this.targetY = tileY;
     }
 
-    /**
-     * Called every frame to update movement.
-     */
+    /** Respawn at initial spawn and freeze for 5 seconds. */
+    public void respawn() {
+        setPosition(initialX, initialY);
+        setMode(Mode.SCATTER);
+        respawnDelay = 5.0; // 5-second wait before moving
+    }
+
+    public boolean isWaitingToMove() {
+        return respawnDelay > 0;
+    }
+
+    /** Called every frame to update movement. */
     public void tick(GameClock clock) {
+        if (respawnDelay > 0) {
+            respawnDelay -= clock.deltaSeconds();
+            return; // skip movement until delay passes
+        }
+
         switch (mode) {
             case FRIGHTENED -> handleFrightened();
             case CHASE -> handleChase();
@@ -86,22 +106,17 @@ public class Ghost {
     // --- Internal helpers ---
 
     private void handleChase() {
-        // Move roughly toward targetX, targetY using Manhattan distance
         Direction best = chooseBestDirectionToward(targetX, targetY);
         if (best != null) movement.request(best);
     }
 
     private void handleScatter() {
-        // In scatter, just idle or circle — here we’ll default to previous direction
-        // so ghosts still move in the map if possible.
         if (movementDirection() == Direction.NONE) {
-            // pick a random valid direction if stopped
             movement.request(randomWalkableDirection());
         }
     }
 
     private void handleFrightened() {
-        // Pick a random direction each tick (simple random AI)
         movement.request(randomWalkableDirection());
     }
 
@@ -153,8 +168,6 @@ public class Ghost {
     }
 
     private Direction movementDirection() {
-        // Since MovementSystem hides current dir, we track it by requesting direction last tick.
-        // For TDD simplicity, we’ll add a tiny extension below if needed.
         try {
             var dirField = MovementSystem.class.getDeclaredField("dir");
             dirField.setAccessible(true);
@@ -164,7 +177,6 @@ public class Ghost {
         }
     }
 
-    // Helper clock for instantaneous commit
     private static class FixedClock implements GameClock {
         private final double dt;
         FixedClock(double dt) { this.dt = dt; }

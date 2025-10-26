@@ -24,7 +24,7 @@ public class GamePanel extends JPanel {
 
     private static final int TILE_SIZE = 16;
     private static final int COLS = 28;
-    private static final int ROWS = 31;
+    private static final int ROWS = 29;
 
     private final TileSet tileSet = new TileSet();
     private Map map;
@@ -56,21 +56,13 @@ public class GamePanel extends JPanel {
         player.setPosition(13, 21);
 
         ghosts = new ArrayList<>();
-        Ghost blinky = new Ghost(map, 6.0);
-        blinky.setPosition(ghostStartCol, ghostRow);
-        blinky.setMode(Ghost.Mode.SCATTER);
+        int r = 14;
+        int c = 12;
 
-        Ghost pinky = new Ghost(map, 6.0);
-        pinky.setPosition(ghostStartCol + 2, ghostRow);
-        pinky.setMode(Ghost.Mode.SCATTER);
-
-        Ghost inky = new Ghost(map, 6.0);
-        inky.setPosition(ghostStartCol + 4, ghostRow);
-        inky.setMode(Ghost.Mode.SCATTER);
-
-        Ghost clyde = new Ghost(map, 6.0);
-        clyde.setPosition(ghostStartCol + 6, ghostRow);
-        clyde.setMode(Ghost.Mode.SCATTER);
+        Ghost blinky = new Ghost(map, 6.0, c, r);
+        Ghost pinky  = new Ghost(map, 6.0, c + 1, r);
+        Ghost inky   = new Ghost(map, 6.0, c + 2, r);
+        Ghost clyde  = new Ghost(map, 6.0, c + 3, r);
 
         ghosts.add(blinky);
         ghosts.add(pinky);
@@ -81,6 +73,7 @@ public class GamePanel extends JPanel {
 
         setupInput();
     }
+
 
     private void setupInput() {
         getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ENTER"), "start");
