@@ -32,6 +32,10 @@ public class FrightenedTimer {
         return remaining > 0;
     }
 
+    public double secondsLeft() {
+        return Math.max(0.0, remaining);
+    }
+
     public int nextEatScore() {
         return switch (chain) {
             case 0 -> 200;
@@ -43,5 +47,11 @@ public class FrightenedTimer {
 
     public void onGhostEaten() {
         if (remaining > 0) chain++;
+    }
+
+    public void cancel() {
+        remaining = 0;
+        chain = 0;
+        for (Ghost g : ghosts) g.setMode(Ghost.Mode.SCATTER);
     }
 }
